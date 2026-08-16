@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Item Value Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F7F4;
+    --panel:#FFFFFF;
+    --ink:#17181A;
+    --sub:#6B6E73;
+    --line:#E7E6E1;
+    --common:#8A8D91;
+    --uncommon:#2F6F4F;
+    --rare:#2B5FA3;
+    --legendary:#C98A2E;
+    --mythic:#A23B5C;
+    --accent:#17181A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:180px;
+  }
+  header{
+    padding:48px 24px 28px;
+    max-width:1100px;
+    margin:0 auto;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--sub);
+    margin:0 0 10px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 8px;
+    letter-spacing:-0.02em;
+  }
+  p.lead{
+    color:var(--sub);
+    font-size:15px;
+    margin:0;
+    max-width:520px;
+    line-height:1.5;
+  }
+
+  .controls{
+    max-width:1100px;
+    margin:0 auto;
+    padding:0 24px 20px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+  }
+  #search{
+    flex:1 1 260px;
+    padding:12px 14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  #search:focus{border-color:var(--ink);}
+  .chip{
+    padding:9px 14px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    font-size:13px;
+    font-weight:500;
+    color:var(--sub);
+    cursor:pointer;
+    user-select:none;
+    transition:all .15s ease;
+    white-space:nowrap;
+  }
+  .chip:hover{border-color:var(--ink);}
+  .chip.active{
+    background:var(--ink);
+    color:#fff;
+    border-color:var(--ink);
+  }
+
+  .grid{
+    max-width:1100px;
+    margin:0 auto;
+    padding:8px 24px 40px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+    gap:14px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    position:relative;
+  }
+  .card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(23,24,26,0.06);
+  }
+  .card.selected{
+    border-color:var(--ink);
+    box-shadow:0 0 0 1.5px var(--ink) inset;
+  }
+  .thumb{
+    width:100%;
+    aspect-ratio:1/1;
+    border-radius:9px;
+    background:
+      repeating-conic-gradient(var(--bg) 0% 25%, #EFEEE9 0% 50%) 0 0/16px 16px;
+    margin-bottom:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--sub);
+  }
+  .rarity-tag{
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    font-weight:600;
+    padding:3px 8px;
+    border-radius:5px;
+    margin-bottom:8px;
+  }
+  .r-common{color:var(--common); background:rgba(138,141,145,0.12);}
+  .r-uncommon{color:var(--uncommon); background:rgba(47,111,79,0.10);}
+  .r-rare{color:var(--rare); background:rgba(43,95,163,0.10);}
+  .r-legendary{color:var(--legendary); background:rgba(201,138,46,0.12);}
+  .r-mythic{color:var(--mythic); background:rgba(162,59,92,0.10);}
+
+  .name{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--sub);
+  }
+  .check{
+    position:absolute;
+    top:14px;
+    right:14px;
+    width:18px;
+    height:18px;
+    border-radius:5px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:all .12s ease;
+  }
+  .card.selected .check{
+    background:var(--ink);
+    border-color:var(--ink);
+  }
+  .check svg{opacity:0; transition:opacity .1s ease;}
+  .card.selected .check svg{opacity:1;}
+
+  .empty{
+    grid-column:1/-1;
+    text-align:center;
+    padding:60px 20px;
+    color:var(--sub);
+    font-size:14px;
+  }
+
+  .tray{
+    position:fixed;
+    bottom:0; left:0; right:0;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    padding:16px 24px;
+    box-shadow:0 -8px 24px rgba(23,24,26,0.05);
+  }
+  .tray-inner{
+    max-width:1100px;
+    margin:0 auto;
+    width:100%;
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    gap:18px;
+  }
+  .side{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .side-b{align-items:flex-end;}
+  .side-head{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    width:100%;
+  }
+  .side-b .side-head{flex-direction:row-reverse;}
+  .side-name{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--sub);
+    cursor:pointer;
+    padding:5px 10px;
+    border-radius:7px;
+    border:1px solid transparent;
+  }
+  .side-name.active{
+    color:var(--ink);
+    background:var(--bg);
+    border-color:var(--line);
+  }
+  .side-total{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:-0.02em;
+    margin-left:auto;
+  }
+  .side-b .side-total{margin-left:0; margin-right:auto;}
+  .slots{
+    display:flex;
+    gap:8px;
+    width:100%;
+  }
+  .side-b .slots{flex-direction:row-reverse;}
+  .slot{
+    flex:1;
+    height:64px;
+    border-radius:10px;
+    border:1.5px dashed var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    background:var(--bg);
+    cursor:default;
+    min-width:0;
+  }
+  .slot.filled{
+    border-style:solid;
+    border-color:var(--line);
+    background:var(--panel);
+    flex-direction:column;
+    padding:6px 4px;
+    gap:1px;
+  }
+  .slot-empty-mark{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--sub);
+    font-size:16px;
+  }
+  .slot-name{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:11px;
+    text-align:center;
+    line-height:1.2;
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .slot-value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--sub);
+  }
+  .slot-remove{
+    position:absolute;
+    top:-6px;
+    right:-6px;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    font-size:11px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .vs-col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    min-width:120px;
+  }
+  .vs-mark{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--sub);
+    letter-spacing:.1em;
+  }
+  .verdict{
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    text-align:center;
+    padding:6px 12px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .verdict.even{background:rgba(138,141,145,0.14); color:var(--sub);}
+  .verdict.a-up{background:rgba(47,111,79,0.12); color:var(--uncommon);}
+  .verdict.b-up{background:rgba(43,95,163,0.12); color:var(--rare);}
+  .clear-btn{
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    font-weight:600;
+    padding:8px 14px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    cursor:pointer;
+    transition:border-color .15s ease;
+  }
+  .clear-btn:hover{border-color:var(--ink);}
+  .clear-btn:disabled{opacity:.4; cursor:default;}
+  @media (max-width:760px){
+    .tray-inner{grid-template-columns:1fr; gap:10px;}
+    .side-b{align-items:flex-start;}
+    .side-b .side-head{flex-direction:row;}
+    .side-b .slots{flex-direction:row;}
+    .side-b .side-total{margin-right:auto; margin-left:0;}
+    .vs-col{flex-direction:row; justify-content:center; min-width:0;}
+  }
+
+  ::selection{background:var(--ink); color:#fff;}
+  @media (prefers-reduced-motion: reduce){
+    .card, .chip, #search, .clear-btn{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Placeholder data · swap in real values</p>
+  <h1>Item Value Calculator</h1>
+  <p class="lead">Pick a side, then tap items to fill its 4 slots. Totals and the trade verdict update live at the bottom.</p>
+</header>
+
+<div class="controls">
+  <input type="text" id="search" placeholder="Search items…">
+  <div class="chip active" data-filter="all">All</div>
+  <div class="chip" data-filter="common">Common</div>
+  <div class="chip" data-filter="uncommon">Uncommon</div>
+  <div class="chip" data-filter="rare">Rare</div>
+  <div class="chip" data-filter="legendary">Legendary</div>
+  <div class="chip" data-filter="mythic">Mythic</div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="tray">
+  <div class="tray-inner">
+    <div class="side side-a">
+      <div class="side-head">
+        <div class="side-name active" data-side="A">Your offer</div>
+        <span class="side-total" id="totalA">0</span>
+      </div>
+      <div class="slots" id="slotsA"></div>
+    </div>
+
+    <div class="vs-col">
+      <span class="vs-mark">VS</span>
+      <span class="verdict even" id="verdict">Empty</span>
+      <button class="clear-btn" id="clearBtn" disabled>Clear all</button>
+    </div>
+
+    <div class="side side-b">
+      <div class="side-head">
+        <div class="side-name" data-side="B">Their offer</div>
+        <span class="side-total" id="totalB">0</span>
+      </div>
+      <div class="slots" id="slotsB"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const rarities = ['common','uncommon','rare','legendary','mythic'];
+  const rarityWeights = [0.34, 0.28, 0.22, 0.12, 0.04];
+
+  function pickRarity(i){
+    // deterministic-ish distribution across 58 items
+    let r = (i * 37) % 100;
+    let acc = 0;
+    for(let j=0;j<rarities.length;j++){
+      acc += rarityWeights[j]*100;
+      if(r < acc) return rarities[j];
+    }
+    return 'common';
+  }
+
+  function valueForRarity(rarity, i){
+    const base = {common:[50,400], uncommon:[400,2000], rare:[2000,9000], legendary:[9000,40000], mythic:[40000,150000]}[rarity];
+    const span = base[1]-base[0];
+    const frac = ((i*53)%97)/97;
+    return Math.round((base[0] + span*frac)/10)*10;
+  }
+
+  const items = Array.from({length:58}, (_, i) => {
+    const rarity = pickRarity(i);
+    return {
+      id: i+1,
+      name: 'Item ' + String(i+1).padStart(2,'0'),
+      rarity,
+      value: valueForRarity(rarity, i)
+    };
+  });
+
+  const grid = document.getElementById('grid');
+  const search = document.getElementById('search');
+  const chips = document.querySelectorAll('.chip');
+  const slotsAEl = document.getElementById('slotsA');
+  const slotsBEl = document.getElementById('slotsB');
+  const totalAEl = document.getElementById('totalA');
+  const totalBEl = document.getElementById('totalB');
+  const verdictEl = document.getElementById('verdict');
+  const clearBtn = document.getElementById('clearBtn');
+  const sideNameEls = document.querySelectorAll('.side-name');
+
+  const SLOTS = 4;
+  let activeFilter = 'all';
+  let activeSide = 'A';
+  let sideA = Array(SLOTS).fill(null);
+  let sideB = Array(SLOTS).fill(null);
+
+  function fmt(n){ return n.toLocaleString('en-US'); }
+
+  function idsOnBoard(){
+    return new Set([...sideA, ...sideB].filter(Boolean).map(it => it.id));
+  }
+
+  function addItem(item){
+    const board = activeSide === 'A' ? sideA : sideB;
+    const emptyIdx = board.indexOf(null);
+    if(emptyIdx === -1) return; // side full
+    board[emptyIdx] = item;
+    render();
+    renderTray();
+  }
+
+  function removeItem(side, idx){
+    (side === 'A' ? sideA : sideB)[idx] = null;
+    render();
+    renderTray();
+  }
+
+  function render(){
+    const q = search.value.trim().toLowerCase();
+    const onBoard = idsOnBoard();
+    const filtered = items.filter(it =>
+      (activeFilter === 'all' || it.rarity === activeFilter) &&
+      it.name.toLowerCase().includes(q)
+    );
+
+    grid.innerHTML = '';
+    if(filtered.length === 0){
+      grid.innerHTML = '<div class="empty">No items match your search.</div>';
+      return;
+    }
+
+    filtered.forEach(it => {
+      const placed = onBoard.has(it.id);
+      const card = document.createElement('div');
+      card.className = 'card' + (placed ? ' selected' : '');
+      card.innerHTML = `
+        <div class="check"><svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="thumb">${it.name.replace('Item ','#')}</div>
+        <span class="rarity-tag r-${it.rarity}">${it.rarity}</span>
+        <p class="name">${it.name}</p>
+        <p class="value">${fmt(it.value)}</p>
+      `;
+      card.addEventListener('click', () => {
+        if(placed) return;
+        addItem(it);
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  function renderSlots(container, board, side){
+    container.innerHTML = '';
+    board.forEach((it, idx) => {
+      const slot = document.createElement('div');
+      if(it){
+        slot.className = 'slot filled';
+        slot.innerHTML = `
+          <button class="slot-remove" title="Remove">×</button>
+          <span class="slot-name">${it.name}</span>
+          <span class="slot-value">${fmt(it.value)}</span>
+        `;
+        slot.querySelector('.slot-remove').addEventListener('click', () => removeItem(side, idx));
+      } else {
+        slot.className = 'slot';
+        slot.innerHTML = `<span class="slot-empty-mark">+</span>`;
+      }
+      container.appendChild(slot);
+    });
+  }
+
+  function renderTray(){
+    renderSlots(slotsAEl, sideA, 'A');
+    renderSlots(slotsBEl, sideB, 'B');
+
+    const totalA = sideA.reduce((s,it) => s + (it ? it.value : 0), 0);
+    const totalB = sideB.reduce((s,it) => s + (it ? it.value : 0), 0);
+    totalAEl.textContent = fmt(totalA);
+    totalBEl.textContent = fmt(totalB);
+
+    const anyItems = sideA.some(Boolean) || sideB.some(Boolean);
+    clearBtn.disabled = !anyItems;
+
+    verdictEl.classList.remove('even','a-up','b-up');
+    if(!anyItems){
+      verdictEl.textContent = 'Empty';
+      verdictEl.classList.add('even');
+    } else if(totalA === totalB){
+      verdictEl.textContent = 'Even trade';
+      verdictEl.classList.add('even');
+    } else if(totalA > totalB){
+      verdictEl.textContent = `Your side +${fmt(totalA-totalB)}`;
+      verdictEl.classList.add('a-up');
+    } else {
+      verdictEl.textContent = `Their side +${fmt(totalB-totalA)}`;
+      verdictEl.classList.add('b-up');
+    }
+  }
+
+  search.addEventListener('input', render);
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeFilter = chip.dataset.filter;
+      render();
+    });
+  });
+  sideNameEls.forEach(el => {
+    el.addEventListener('click', () => {
+      sideNameEls.forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+      activeSide = el.dataset.side;
+    });
+  });
+  clearBtn.addEventListener('click', () => {
+    sideA = Array(SLOTS).fill(null);
+    sideB = Array(SLOTS).fill(null);
+    render();
+    renderTray();
+  });
+
+  render();
+  renderTray();
+</script>
+
+</body>
+</html>
