@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oxalis-Rhincodon</title>
+<link rel="icon" type="image/jpeg" href="favicon.jpeg">
+<meta name="description" content="links">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400..600&family=JetBrains+Mono:wght@400;500&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     DESIGN TOKENS — change these to restyle the whole page
+     ============================================================ */
+  :root{
+    --bg-0:#0e150f;
+    --bg-1:#1c2818;
+    --accent-1:#6b3aa0;       /* primary accent */
+    --accent-1-light:#a97fd9; /* lighter accent, used for hover/glow */
+    --accent-2:#7a9b6e;       /* secondary accent */
+    --text:#ede6d6;
+    --text-dim:#c7bfae;
+    --label:#c9a15a;          /* small caps / eyebrow / tag color */
+    --radius:2px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+
+  body{
+    background:
+      radial-gradient(ellipse 900px 600px at var(--mx,50%) var(--my,20%), rgba(107,58,160,0.16), transparent 60%),
+      linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 100%);
+    color:var(--text);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:48px 20px;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  /* ambient background field — currently empty, populate via JS below if wanted */
+  .bg-field{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+    opacity:0.5;
+  }
+
+  .card{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:440px;
+    text-align:center;
+    zoom:1.75;
+  }
+
+  /* signature mark — swap this SVG for whatever motif fits the theme */
+  .mark{
+    width:64px;
+    height:64px;
+    margin:0 auto 22px;
+  }
+  .mark svg{
+    width:100%;
+    height:100%;
+    transform-origin:50% 100%;
+    animation:reveal 1.4s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes reveal{
+    0%{ transform:scale(0.2) rotate(-25deg); opacity:0; }
+    60%{ opacity:1; }
+    100%{ transform:scale(1) rotate(0deg); opacity:1; }
+  }
+
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--label);
+    opacity:0;
+    animation:fade-up 0.7s ease 0.5s both;
+  }
+
+  .status-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-top:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    animation:fade-up 0.7s ease 0.56s both;
+  }
+  .status-badge .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#747f8d; /* default = offline/unknown */
+    flex-shrink:0;
+  }
+  .status-badge.online .dot{ background:#3ba55d; }
+  .status-badge.idle .dot{ background:#faa61a; }
+  .status-badge.dnd .dot{ background:#ed4245; }
+  .status-badge.offline .dot{ background:#747f8d; }
+
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:clamp(38px, 9vw, 52px);
+    letter-spacing:-0.01em;
+    margin:6px 0 2px;
+    color:var(--text);
+    opacity:0;
+    animation:fade-up 0.7s ease 0.62s both;
+  }
+
+  .clan-tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:14px;
+    vertical-align:middle;
+    color:var(--label);
+    border:1px solid var(--label);
+    border-radius:3px;
+    padding:2px 6px;
+    margin-left:8px;
+  }
+
+  .subtitle{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-weight:400;
+    font-size:15px;
+    color:var(--text-dim);
+    opacity:0;
+    animation:fade-up 0.7s ease 0.74s both;
+  }
+
+  .avatar{
+    width:104px;
+    height:104px;
+    border-radius:50%;
+    margin:28px auto 18px;
+    display:block;
+    object-fit:cover;
+    border:1px solid rgba(201,161,90,0.35);
+    padding:5px;
+    opacity:0;
+    animation:fade-up 0.7s ease 0.86s both;
+  }
+
+  .bio{
+    font-size:14.5px;
+    line-height:1.6;
+    color:var(--text-dim);
+    max-width:340px;
+    margin:0 auto 34px;
+    opacity:0;
+    animation:fade-up 0.7s ease 0.98s both;
+  }
+
+  @keyframes fade-up{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .links{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    opacity:0;
+    animation:fade-up 0.7s ease 1.1s both;
+  }
+
+  .link{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px 18px;
+    border:1px solid rgba(237,230,214,0.14);
+    border-radius:var(--radius);
+    background:rgba(237,230,214,0.03);
+    text-decoration:none;
+    color:var(--text);
+    text-align:left;
+    transition:border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+    cursor:pointer;
+  }
+  .link:hover, .link:focus-visible{
+    border-color:var(--accent-1-light);
+    background:rgba(107,58,160,0.1);
+    transform:translateX(3px);
+    outline:none;
+  }
+  .link .no{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    color:var(--label);
+    letter-spacing:0.08em;
+    min-width:28px;
+  }
+  .link .label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    flex:1;
+  }
+  .link .arrow{
+    font-size:13px;
+    color:var(--text-dim);
+    opacity:0;
+    transition:opacity 0.2s ease, transform 0.2s ease;
+  }
+  .link:hover .arrow{ opacity:1; transform:translateX(2px); }
+
+  footer{
+    margin-top:40px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.1em;
+    color:rgba(199,191,174,0.4);
+    text-transform:uppercase;
+    opacity:0;
+    animation:fade-up 0.7s ease 1.22s both;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-field" id="bgField"></div>
+
+<div class="card">
+
+  <!-- signature mark: placeholder circle, swap for a themed SVG later -->
+  <div class="mark">
+    <svg viewBox="0 0 64 64" fill="none">
+      <!-- five funnel-shaped petals, oxalis-style -->
+      <g>
+        <path d="M32 30 C32 30 26 8 32 3 C38 8 32 30 32 30Z" fill="#4a1f6b"/>
+        <path d="M32 30 C32 30 10 17 8 10 C16 6 32 22 32 30Z" fill="#5a2b7d"/>
+        <path d="M32 30 C32 30 14 45 15 53 C22 55 32 36 32 30Z" fill="#4a1f6b"/>
+        <path d="M32 30 C32 30 50 45 49 53 C42 55 32 36 32 30Z" fill="#5a2b7d"/>
+        <path d="M32 30 C32 30 54 17 56 10 C48 6 32 22 32 30Z" fill="#4a1f6b"/>
+      </g>
+      <circle cx="32" cy="30" r="4" fill="#c9a15a"/>
+    </svg>
+  </div>
+
+  <p class="eyebrow">Sparky Bagguette</p>
+  <div id="statusBadge" class="status-badge" style="opacity:0;">
+    <span class="dot"></span>
+    <span class="status-text">loading status…</span>
+  </div>
+  <h1>Oxalis-Rhincodon <span class="clan-tag">Plant</span></h1>
+  <p class="subtitle">Fence them in fence them out</p>
+
+  <img class="avatar" src="avatar.jpeg" alt="avatar">
+
+  <p class="bio">I love blackholes 🖤</p>
+
+  <div class="links">
+
+    <a class="link" href="https://github.com/Oxalis-Rhincodon" target="_blank" rel="noopener">
+      <span class="no">01</span>
+      <span class="label">Github</span>
+      <span class="arrow">→</span>
+    </a>
+
+    <div class="link" onclick="navigator.clipboard.writeText('._.oxalis'); this.querySelector('.arrow').textContent='copied'; setTimeout(()=>this.querySelector('.arrow').textContent='copy',1200)">
+      <span class="no">02</span>
+      <span class="label">Discord</span>
+      <span class="arrow">copy</span>
+    </div>
+
+    <a class="link" href="https://steamcommunity.com/profiles/76561198056167475/" target="_blank" rel="noopener">
+      <span class="no">03</span>
+      <span class="label">steam</span>
+      <span class="arrow">→</span>
+    </a>
+
+  </div>
+
+  <footer>halo &lt;3</footer>
+
+</div>
+
+<script>
+  // cursor-follow glow
+  document.addEventListener('mousemove', (e)=>{
+    const x = (e.clientX / window.innerWidth) * 100;
+    const y = (e.clientY / window.innerHeight) * 100;
+    document.body.style.setProperty('--mx', x + '%');
+    document.body.style.setProperty('--my', y + '%');
+  });
+
+  // bgField is intentionally empty — add themed ambient elements here later
+
+  // --- Discord status badge ---------------------------------------------
+  // TODO: replace with the exact "Raw" URL from your gist's status.json file
+  const STATUS_RAW_URL = "https://gist.github.com/Oxalis-Rhincodon/d64b7dddc8d882bc932c3eb9a79bb361";
+
+  const STATUS_LABELS = {
+    online: "online",
+    idle: "idle",
+    dnd: "do not disturb",
+    offline: "offline",
+  };
+
+  async function loadDiscordStatus(){
+    const badge = document.getElementById('statusBadge');
+    if (!badge) return;
+    try{
+      const res = await fetch(STATUS_RAW_URL + '?t=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) throw new Error('bad response');
+      const data = await res.json();
+      const status = data.status || 'offline';
+      badge.className = 'status-badge ' + status;
+      const activityText = data.activity?.name ? ` — ${data.activity.name}` : '';
+      badge.querySelector('.status-text').textContent = (STATUS_LABELS[status] || status) + activityText;
+    }catch(err){
+      badge.className = 'status-badge offline';
+      badge.querySelector('.status-text').textContent = 'status unavailable';
+    }
+    badge.style.opacity = '1';
+  }
+
+  loadDiscordStatus();
+  setInterval(loadDiscordStatus, 60000); // refresh every 60s
+</script>
+
+</body>
+</html>
