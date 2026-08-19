@@ -269,6 +269,42 @@
   });
 
   // bgField is intentionally empty — add themed ambient elements here later
+
+
+
+// --- Discord status badge ---------------------------------------------
+const STATUS_RAW_URL = "https://gist.github.com/Oxalis-Rhincodon/d64b7dddc8d882bc932c3eb9a79bb361";
+
+const STATUS_LABELS = {
+  online: "online",
+  idle: "idle",
+  dnd: "do not disturb",
+  offline: "offline",
+};
+
+async function loadDiscordStatus(){
+  const badge = document.getElementById('statusBadge');
+  if (!badge) return;
+  try{
+    const res = await fetch(STATUS_RAW_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('bad response');
+    const data = await res.json();
+    const status = data.status || 'offline';
+    badge.className = 'status-badge ' + status;
+    const activityText = data.activity?.name ? ` — ${data.activity.name}` : '';
+    badge.querySelector('.status-text').textContent = (STATUS_LABELS[status] || status) + activityText;
+  }catch(err){
+    badge.className = 'status-badge offline';
+    badge.querySelector('.status-text').textContent = 'status unavailable';
+  }
+  badge.style.opacity = '1';
+}
+
+loadDiscordStatus();
+setInterval(loadDiscordStatus, 60000); // refresh every 60s
+
+
+  
 </script>
 
 </body>
