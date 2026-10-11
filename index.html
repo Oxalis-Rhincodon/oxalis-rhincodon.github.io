@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oxalis-Rhincodon</title>
+<link rel="icon" type="image/jpeg" href="favicon.jpeg">
+<meta name="description" content="links">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400..600&family=JetBrains+Mono:wght@400;500&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     DESIGN TOKENS — change these to restyle the whole page
+     ============================================================ */
+  :root{
+    --bg-0:#030304;
+    --bg-1:#111114;
+    --accent-1:#6e7178;       /* primary accent (grey) */
+    --accent-1-light:#c4c7cc; /* lighter grey, hover/glow */
+    --accent-2:#8a8d93;       /* secondary grey */
+    --text:#ececee;
+    --text-dim:#a3a6ab;
+    --label:#9ea2a8;          /* small caps / eyebrow / tag color */
+    --radius:2px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ min-height:100%; background:var(--bg-1); }
+
+  body{
+    background:
+      radial-gradient(ellipse 900px 600px at var(--mx,50%) var(--my,20%), rgba(196,199,204,0.07), transparent 60%),
+      linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 100%);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:48px 20px;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  /* ---------- background layers ---------- */
+
+  /* Jupiter storm photo (jupiter-storm.jpg) — fills the whole screen */
+  .jupiter{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center;
+    pointer-events:none;
+    z-index:0;
+    opacity:0.6;  /* lower = darker, raise = brighter */
+    /* add  filter:grayscale(1);  for a pure black-and-grey look */
+  }
+  /* darkens the middle so the card stays readable */
+  .vignette{
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(ellipse 480px 560px at 50% 50%, rgba(3,3,4,0.85), transparent 100%);
+  }
+
+  .card{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:440px;
+    text-align:center;
+    zoom:1.45;
+  }
+
+  .mark{ width:64px; height:64px; margin:0 auto 22px; }
+  .mark svg{
+    width:100%; height:100%;
+    transform-origin:50% 50%;
+    animation:reveal 1.4s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes reveal{
+    0%{ transform:scale(0.2) rotate(-25deg); opacity:0; }
+    60%{ opacity:1; }
+    100%{ transform:scale(1) rotate(0deg); opacity:1; }
+  }
+
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--label);
+    opacity:0;
+    animation:fade-up 0.7s ease 0.5s both;
+  }
+
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:clamp(38px, 9vw, 52px);
+    letter-spacing:-0.01em;
+    margin:6px 0 2px;
+    color:var(--text);
+    opacity:0;
+    animation:fade-up 0.7s ease 0.62s both;
+  }
+
+  .clan-tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:14px;
+    vertical-align:middle;
+    color:var(--label);
+    border:1px solid var(--label);
+    border-radius:3px;
+    padding:2px 6px;
+    margin-left:8px;
+  }
+
+  .subtitle{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-weight:400;
+    font-size:15px;
+    color:var(--text-dim);
+    opacity:0;
+    animation:fade-up 0.7s ease 0.74s both;
+  }
+
+  .avatar{
+    width:104px;
+    height:104px;
+    border-radius:50%;
+    margin:28px auto 18px;
+    display:block;
+    object-fit:cover;
+    border:1px solid rgba(196,199,204,0.35);
+    padding:5px;
+    opacity:0;
+    animation:fade-up 0.7s ease 0.86s both;
+  }
+
+  .bio{
+    font-size:14.5px;
+    line-height:1.6;
+    color:var(--text-dim);
+    max-width:340px;
+    margin:0 auto 34px;
+    opacity:0;
+    animation:fade-up 0.7s ease 0.98s both;
+  }
+
+  @keyframes fade-up{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .links{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    opacity:0;
+    animation:fade-up 0.7s ease 1.1s both;
+  }
+
+  .link{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px 18px;
+    border:1px solid rgba(236,236,238,0.14);
+    border-radius:var(--radius);
+    background:rgba(8,8,10,0.55);
+    backdrop-filter:blur(3px);
+    text-decoration:none;
+    color:var(--text);
+    text-align:left;
+    transition:border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+    cursor:pointer;
+  }
+  .link:hover, .link:focus-visible{
+    border-color:var(--accent-1-light);
+    background:rgba(196,199,204,0.08);
+    transform:translateX(3px);
+    outline:none;
+  }
+  .link .no{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    color:var(--label);
+    letter-spacing:0.08em;
+    min-width:28px;
+  }
+  .link .label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    flex:1;
+  }
+  .link .arrow{
+    font-size:13px;
+    color:var(--text-dim);
+    opacity:0;
+    transition:opacity 0.2s ease, transform 0.2s ease;
+  }
+  .link:hover .arrow{ opacity:1; transform:translateX(2px); }
+
+  footer{
+    margin-top:40px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.1em;
+    color:rgba(163,166,171,0.45);
+    text-transform:uppercase;
+    opacity:0;
+    animation:fade-up 0.7s ease 1.22s both;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<img class="jupiter" src="jupiter-storm.jpg" alt="">
+
+<div class="vignette"></div>
+
+<div class="card">
+
+  <!-- signature mark: black hole with accretion ring -->
+  <div class="mark">
+    <svg viewBox="0 0 64 64" fill="none">
+      <ellipse cx="32" cy="32" rx="28" ry="9" stroke="#8a8d93" stroke-width="2.2" transform="rotate(-18 32 32)"/>
+      <ellipse cx="32" cy="32" rx="20" ry="6" stroke="#c4c7cc" stroke-width="1.4" transform="rotate(-18 32 32)" opacity=".8"/>
+      <circle cx="32" cy="32" r="10" fill="#000" stroke="#c4c7cc" stroke-width="1"/>
+    </svg>
+  </div>
+
+  <p class="eyebrow">Sparky Bagguette</p>
+  <h1>Oxalis-Rhincodon <span class="clan-tag">Plant</span></h1>
+  <p class="subtitle">Fence them in fence them out</p>
+
+  <img class="avatar" src="avatar.jpeg" alt="avatar">
+
+  <p class="bio">I love blackholes 🖤</p>
+
+  <div class="links">
+
+    <a class="link" href="https://github.com/Oxalis-Rhincodon" target="_blank" rel="noopener">
+      <span class="no">01</span>
+      <span class="label">Github</span>
+      <span class="arrow">→</span>
+    </a>
+
+    <div class="link" onclick="navigator.clipboard.writeText('._.oxalis'); this.querySelector('.arrow').textContent='copied'; setTimeout(()=>this.querySelector('.arrow').textContent='copy',1200)">
+      <span class="no">02</span>
+      <span class="label">Discord</span>
+      <span class="arrow">copy</span>
+    </div>
+
+    <a class="link" href="https://steamcommunity.com/profiles/76561198056167475/" target="_blank" rel="noopener">
+      <span class="no">03</span>
+      <span class="label">steam</span>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="link" href="https://www.roblox.com/users/1866687930/profile" target="_blank" rel="noopener">
+      <span class="no">04</span>
+      <span class="label">roblox</span>
+      <span class="arrow">→</span>
+    </a>
+
+  </div>
+
+  <footer>halo &lt;3</footer>
+
+</div>
+
+<script>
+  // cursor-follow glow
+  document.addEventListener('mousemove', (e)=>{
+    const x = (e.clientX / window.innerWidth) * 100;
+    const y = (e.clientY / window.innerHeight) * 100;
+    document.body.style.setProperty('--mx', x + '%');
+    document.body.style.setProperty('--my', y + '%');
+  });
+
+</script>
+
+</body>
+</html>
